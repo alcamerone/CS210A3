@@ -1,0 +1,224 @@
+<?xml version="1.0" ?>
+<!DOCTYPE html 
+PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<head>
+   <link rel="stylesheet" href="http://www.cs.auckland.ac.nz/~mano/manos.css" type="text/css" />
+   <title>COMPSCI 210: Assignment #3 - Computer Organization &amp; C++ Programming
+   </title>
+</head>
+<body style="background-color: #ffffce">
+   <h1>
+      COMPSCI 210: Assignment #3 - Computer Organization &amp; C++ Programming</h1>
+   <p>
+      This assignment aims to give you some experience with C++ programming in the context
+      of Computer Organization. The solutions should use the C++ programming language,
+      and only command-line applications are required.
+   </p>
+   <p>
+      You may wish to study and understand the C++ example programs supplied to you in
+      the lectures and tutorials before commencing this assignment. Some of the sample
+      code supplied may give you a head start with the assignment.
+   </p>
+   <p>
+      We will be using an automated marking facility, so it is important that you strictly
+      follow the input/output format specified in the assignment. If in doubt, please
+      consult with the lecturer or tutor. A <a href="marking.html">marking guideline</a>
+      for the assignment is supplied, and you must go through the guideline before submitting
+      your solution.
+   </p>
+   <p>
+      We will be using the GNU compiler <span class="code">gcc</span> on <span class="code">
+         login.cs.auckland.ac.nz</span> for marking. Therefore, you must ensure that your
+      submissions compile and run on this system. Submissions that fail to compile will
+      attract no marks.
+   </p>
+   <h2>
+      Part I: An alternative representation for unsigned integers</h2>
+   <p>
+      In the first part of this course, you learnt how primitives types such as integers
+      and floating-point numbers are represented in a computer.
+   </p>
+   <p>
+      In this assignment, you are asked to write a C++ program that understands an alternative
+      representation for unsigned integers: <em>uintvar</em>, or variable-length unsigned
+      integer.
+   </p>
+   <p>
+      Variable-length unsigned integers, or <em>uintvar</em> in short, are also known
+      as variable-length quantities. Refer to the <a href="http://en.wikipedia.org/wiki/Variable-length_quantity">
+         Wiki article</a> on the topic for a historical note and current usage. The article
+      also has an illustrative example.
+   </p>
+   <div class="highlight">
+      <p>
+         A <em>unitvar</em> representation uses variable number of bytes to represent an
+         unsigned integer. Only the lower 7 bits of a byte are used for the number. This
+         means the maximum value a single byte can house is 127. Values greater than 127
+         bytes will need more than a byte to represent them.
+      </p>
+      <p>
+         The most-significant bit (MSB) of the byte is used as a continuation marker. If
+         MSB is 0, that means no further bytes to follow, and an MSB of 1 means there is
+         a byte to follow. This allows chaining an arbitrary number of bytes.
+      </p>
+      <p>
+         <b>Representing a value as a <em>uintvar</em>:</b> Write down the binary representation
+         of the given value. Group them into 7-bit groups starting with the lowest significant
+         bit. For example, 137 is 10001001. Grouped into 7-bit groups, this will be 1:0001001.
+         For each group, except the last group, add an eighth bit at MSB and set it to 1.
+         For the last group, add the eighth bit at MSB as before but set it to 0. Our 137
+         example, then becomes 10000001:00001001. In other words, the <em>uintvar</em> corresponding
+         to 137 (89 in hex) has two bytes: 81 and 9, both in hex.
+      </p>
+      <p>
+         To decode a sequence of bytes representing a <em>uintvar</em> into an integer, we
+         follow the reverse of the process described above: discard the MSB of each byte,
+         and concatenate all the remaining 7 bits of each byte; find the integer value represented
+         by the resulting binary number. Note that we need to ascertain that all but the
+         last of the input bytes have their MSBs set to 1, while the last byte its MSB set
+         to 0.
+      </p>
+      <p>
+         A <em>uintvar</em> is related to base-128 representation of an integer. For example,
+         137 in base-128 is 19. The only addition we have for <em>uintvar</em> is the presence
+         of the continuation bit. You can use the techniques you learnt earlier in this course
+         to represent values in, for example, <em>hex</em> to represent values in base-128.
+         Once the value is in base-128, then the only addition required for <em>uintvar</em>
+         is to set the continuation bits appropriately. Similarly, when you are decoing a
+         <em>uintvar</em>, you can find the value represented by the lower 7 bits of each
+         byte (this will be less than or equal to 127), and apply base-128 arithmetic to
+         find the integer value represented by the <em>uintvar</em>.
+      </p>
+      <p>
+         You may also find this observation useful: when we have 7-bit values in a byte,
+         setting the MSB amounts to adding 0x80 (or 128 in decimal) to the byte value.
+      </p>
+      <p>
+         <b>Examples</b>: The value 128 requires two bytes: <b>1</b>000 0001 <b>0</b>000
+         0000. And value 137 will be: <b>1</b>000 0001 <b>0</b>000 1001. The second bytes
+         for the values 128 and 137 have their first bits set to 0 to indicate there are
+         no more bytes to follow.
+      </p>
+   </div>
+   <p>
+      The program should accept input from the command-line and print results to the standard
+      output. For each <em>unitvar</em> supplied in the command-line the program prints
+      the corresponding integer values. Inputs in the command-line are assumed to be in
+      hexadecimal representation. The output integer is in decimal representation.
+   </p>
+   <p>
+      A typical run of the application would be:
+   </p>
+   <pre>
+ ./a.out 8a5c 8102
+</pre>
+   <p>
+      which should print to the standard output the lines
+   </p>
+   <pre>
+8a5c:   1372
+8102:   130
+</pre>
+   <p>
+      (and nothing else).
+   </p>
+   <p>
+      Some sample runs of the program are shown below.
+   </p>
+   <pre>
+sman063@login01% ./a.out 8751
+8751:   977
+sman063@login01% ./a.out 7f 813e
+7f:     127
+813e:   190
+sman063@login01% ./a.out 813e5a2f 9a15
+813e5a2f:       190
+9a15:   3349
+sman063@login01% ./a.out 9a81
+9a81:   0
+sman063@login01%
+</pre>
+   <p>
+      Note that the input <em>813e5a2f</em> above is terminated by byte <em>3e</em>. The
+      remaining bytes (i.e. <em>5a2f</em>) have no relevance. Effectively <em>813e5a2f</em>
+      is the same as <em>813e</em>.
+   </p>
+   <p>
+      Note that the input of <em>9a81</em> above is not valid since there is no terminating
+      byte (i.e. there is no byte with the MSB set to 0). In such a case, we output 0
+      to mean an error.
+   </p>
+   <p>
+      You may assume the inputs on the command-line will be valid, and therefore you do
+      not need to check for input errors (such as running <span class="code">./a.out 3.14159
+         hello 2.125</span> ).
+   </p>
+   <p>
+      A sample solution for this part is available: <a href="a3ss_part1.s">a3ss_part1.s</a>.
+      You are required to try it out: compile the file on <span class="code">login.cs.auckland.ac.nz</span>
+      using the command <span class="code">g++ -o a3ss_part1 a3ss_part1.s</span> and run
+      the resulting executable <span class="code">a3ss_part1</span>. Note that the option
+      <span class="code">-o</span> tells the compiler to create the executable in the
+      supplied file name rather than the default <span class="code">a.out</span>. If you
+      omit <span class="code">-o a3ss_part1</span>, then the executable will be called
+      <span class="code">a.out</span>.
+   </p>
+   <p>
+      Note that <span class="code">g++</span> is an alias to <span class="code">gcc -lstdc++</span>.
+      In other words, <span class="code">g++</span> invokes the GNU compiler <span class="code">
+         gcc</span> and instructs it to use the standard C++ library at link stage. Therefore
+      <span class="code">g++ hello.cpp</span> and <span class="code">gcc -lstdc++ hello.cpp</span>
+      are equivalent commands.
+   </p>
+   <h2>
+      Part II: Width &amp; height of wireless bitmap images</h2>
+   <p>
+      <a href="http://en.wikipedia.org/wiki/Wireless_Application_Protocol_Bitmap_Format">
+         Wireless Bitmap</a> (WBMP) is a monochromatic image file format used by older
+      mobile devices. A number of sample WBMP images are available <a href="http://www.cs.auckland.ac.nz/courses/compsci335s2c/assignments/mano/a1/WBMP/">
+         here</a>. To view WBMP images on a Windows platform, you may use <a href="http://www.cs.auckland.ac.nz/courses/compsci335s2c/resources/mano/slowview.zip">
+            SlowView</a>. A <a href="http://www.cs.auckland.ac.nz/courses/compsci335s2c/tutorials/mano/WirelessBitmaps.pdf">
+               tutorial handout</a> on the format of WBMP is available.
+   </p>
+   <p>
+      In this part of the assignment, you are required to print out the width and height
+      of a given WBMP image file.
+   </p>
+   <p>
+      To this end, you need to understand just the header part of the WBMP file. The first
+      two bytes of the file are always 0. We then have two <em>uintvar</em>s representing
+      the width and height respectively of the image.
+   </p>
+   <p>
+      You will need to use the C++ input file stream class <em>ifstream</em> to open the
+      WBMP image file, and use <em>ifstream</em>'s <em>read</em> method to read bytes
+      from the file. An illustrative example of how this could be done is provided at
+      <a href="http://www.cplusplus.com/reference/iostream/istream/read/">cplusplus.com</a>.
+   </p>
+   <p>
+      Once you have identified the two <em>unitvar</em>s that make up the width and height,
+      you print them out. See the following sample runs illustrating this. These show
+      the expected output for some WBMP images (existing in a directory named <em>wbmp</em>).
+   </p>
+   <pre>
+sman063@login01% ./a.out wbmp/X.wbmp wbmp/Box12x12.wbmp
+wbmp/X.wbmp:
+        width: 8
+        height: 8
+wbmp/Box12x12.wbmp:
+        width: 12
+        height: 12
+sman063@login01% ./a.out wbmp/Kea.wbmp
+wbmp/Kea.wbmp:
+        width: 800
+        height: 1200
+sman063@login01%
+   </pre>
+   <p>
+      A sample solution for this part is available: <a href="a3ss_part2.s">a3ss_part2.s</a>,
+      and you are required to try this out.
+   </p>
+</body>
+</html>
